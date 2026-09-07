@@ -76,7 +76,11 @@ class _LessonSearchBarState extends State<LessonSearchBar> {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, -2)),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
                 ],
               ),
               child: matches.isEmpty
@@ -84,14 +88,18 @@ class _LessonSearchBarState extends State<LessonSearchBar> {
                       padding: EdgeInsets.all(16),
                       child: Text(
                         'Brak lekcji pasujących do wyszukiwania',
-                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     )
                   : ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       itemCount: matches.length,
-                      separatorBuilder: (_, _) => Divider(height: 1, color: Colors.grey[200]),
+                      separatorBuilder: (_, _) =>
+                          Divider(height: 1, color: Colors.grey[200]),
                       itemBuilder: (context, index) {
                         final match = matches[index];
                         return ListTile(
@@ -102,10 +110,16 @@ class _LessonSearchBarState extends State<LessonSearchBar> {
                                 : Icons.folder_shared_outlined,
                             color: AppColors.primary,
                           ),
-                          title: Text(match.lesson.title, style: const TextStyle(fontSize: 14)),
+                          title: Text(
+                            match.lesson.title,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                           subtitle: Text(
                             match.course.title,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           onTap: () => _select(match),
                         );
@@ -116,7 +130,7 @@ class _LessonSearchBarState extends State<LessonSearchBar> {
             controller: _controller,
             onChanged: (value) => setState(() => _query = value),
             decoration: InputDecoration(
-              hintText: 'Szukaj lekcji…',
+              hintText: 'Szukaj...',
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: showResults
                   ? IconButton(
@@ -130,7 +144,10 @@ class _LessonSearchBarState extends State<LessonSearchBar> {
               isDense: true,
               filled: true,
               fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,
