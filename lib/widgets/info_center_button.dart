@@ -42,7 +42,14 @@ class InfoPageCenterButton extends StatelessWidget {
               const Expanded(
                 child: SingleChildScrollView(
                   child: Text(
-                    'Tutaj możesz umieścić dodatkowe informacje o aplikacji, np. historię zmian, politykę prywatności czy dane kontaktowe.',
+                    'Aplikacja Zoga Multidimensional Movement służy do udostępniania '
+                    'materiałów z kursów uczestnikom szkoleń. Dostęp do każdego kursu '
+                    'odblokowuje się jednorazowym kodem otrzymanym od Zoga '
+                    'Multidimensional Movement. Materiały wideo hostowane są na '
+                    'YouTube oraz Google Drive.\n\n'
+                    'To wersja PoC — dane kursów i konta przechowywane są '
+                    'lokalnie na urządzeniu, docelowo zostaną zsynchronizowane '
+                    'z bazą Firestore.',
                     style: TextStyle(
                       fontSize: 15,
                       color: AppColors.textPrimary,
