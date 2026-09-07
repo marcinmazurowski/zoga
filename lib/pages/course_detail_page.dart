@@ -3,12 +3,16 @@ import '../models/course.dart';
 import '../models/lesson.dart';
 import '../services/course_repository.dart';
 import '../theme/app_colors.dart';
-import 'video_player_page.dart';
+import '../widgets/inline_video_player.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Course course;
 
-  const CourseDetailPage({super.key, required this.course});
+  /// When set, this lesson is expanded (and scrolled into view)
+  /// automatically — used when arriving here from the lesson search.
+  final Lesson? initialLesson;
+
+  const CourseDetailPage({super.key, required this.course, this.initialLesson});
 
   @override
   State<CourseDetailPage> createState() => _CourseDetailPageState();
@@ -16,29 +20,49 @@ class CourseDetailPage extends StatefulWidget {
 
 class _CourseDetailPageState extends State<CourseDetailPage> {
   Set<String> _watchedIds = {};
+  String? _expandedLessonId;
   bool _loading = true;
+  final Map<String, GlobalKey> _lessonKeys = {};
 
   @override
   void initState() {
     super.initState();
+    _expandedLessonId = widget.initialLesson?.id;
+    for (final lesson in widget.course.lessons) {
+      _lessonKeys[lesson.id] = GlobalKey();
+    }
     _load();
   }
 
   Future<void> _load() async {
     final watched = await courseRepository.getWatchedLessonIds();
+    if (widget.initialLesson != null) {
+      await courseRepository.setLessonWatched(widget.initialLesson!.id, true);
+      watched.add(widget.initialLesson!.id);
+    }
     setState(() {
       _watchedIds = watched;
       _loading = false;
     });
+    if (widget.initialLesson != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = _lessonKeys[widget.initialLesson!.id]?.currentContext;
+        if (context != null) {
+          Scrollable.ensureVisible(context, duration: const Duration(milliseconds: 300));
+        }
+      });
+    }
   }
 
-  Future<void> _openLesson(Lesson lesson) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => VideoPlayerPage(lesson: lesson)),
-    );
-    // Mark as watched once the user has opened the video; can still be
-    // toggled manually from the switch below.
-    await _setWatched(lesson.id, true);
+  void _toggleLesson(Lesson lesson) {
+    setState(() {
+      _expandedLessonId = _expandedLessonId == lesson.id ? null : lesson.id;
+    });
+    if (_expandedLessonId == lesson.id) {
+      // Mark as watched once the user expands the video; can still be
+      // toggled manually from the switch below.
+      _setWatched(lesson.id, true);
+    }
   }
 
   Future<void> _setWatched(String lessonId, bool watched) async {
@@ -88,9 +112,11 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 ),
                 const SizedBox(height: 16),
                 ...course.lessons.map((lesson) => _LessonTile(
+                      key: _lessonKeys[lesson.id],
                       lesson: lesson,
                       watched: _watchedIds.contains(lesson.id),
-                      onTap: () => _openLesson(lesson),
+                      expanded: _expandedLessonId == lesson.id,
+                      onTap: () => _toggleLesson(lesson),
                       onWatchedChanged: (value) => _setWatched(lesson.id, value),
                     )),
               ],
@@ -102,12 +128,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 class _LessonTile extends StatelessWidget {
   final Lesson lesson;
   final bool watched;
+  final bool expanded;
   final VoidCallback onTap;
   final ValueChanged<bool> onWatchedChanged;
 
   const _LessonTile({
+    super.key,
     required this.lesson,
     required this.watched,
+    required this.expanded,
     required this.onTap,
     required this.onWatchedChanged,
   });
@@ -123,32 +152,41 @@ class _LessonTile extends StatelessWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 3)),
         ],
       ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Icon(
-          lesson.source == VideoSource.youtube ? Icons.smart_display_outlined : Icons.folder_shared_outlined,
-          color: AppColors.primary,
-        ),
-        title: Text(
-          lesson.title,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-            decoration: watched ? TextDecoration.lineThrough : null,
-            decorationColor: AppColors.textSecondary,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            leading: Icon(
+              lesson.source == VideoSource.youtube ? Icons.smart_display_outlined : Icons.folder_shared_outlined,
+              color: AppColors.primary,
+            ),
+            title: Text(
+              lesson.title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Switch(
+                  value: watched,
+                  activeThumbColor: AppColors.primary,
+                  onChanged: onWatchedChanged,
+                ),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
           ),
-        ),
-        subtitle: Text(
-          lesson.source == VideoSource.youtube ? 'YouTube' : 'Google Drive',
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-        trailing: Switch(
-          value: watched,
-          activeThumbColor: AppColors.primary,
-          onChanged: onWatchedChanged,
-        ),
+          if (expanded) InlineVideoPlayer(lesson: lesson),
+        ],
       ),
     );
   }

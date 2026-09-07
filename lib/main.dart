@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/app_user.dart';
-import 'models/course.dart';
-import 'models/lesson.dart';
 import 'pages/admin_page.dart';
-import 'pages/course_detail_page.dart';
 import 'pages/home_page.dart';
 import 'pages/info_page.dart';
 import 'pages/login_page.dart';
@@ -12,7 +9,6 @@ import 'services/course_repository.dart';
 import 'theme/app_colors.dart';
 import 'widgets/home_center_button.dart';
 import 'widgets/info_center_button.dart';
-import 'widgets/lesson_search_bar.dart';
 import 'widgets/navigation_bar.dart';
 import 'widgets/unlock_course_sheet.dart';
 
@@ -109,9 +105,7 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   late PageController _pageController;
   int _currentPageIndex = 0;
-  double _pageOffset = 0;
   late final GlobalKey<HomePageState> _homePageKey;
-  List<Course> _unlockedCourses = [];
 
   late final List<Widget> _pages;
 
@@ -119,19 +113,9 @@ class _RootPageState extends State<RootPage> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    _pageController.addListener(() {
-      final page = _pageController.page;
-      if (page != null) {
-        setState(() => _pageOffset = page);
-      }
-    });
     _homePageKey = GlobalKey<HomePageState>();
     _pages = [
-      HomePage(
-        key: _homePageKey,
-        onUnlockedCoursesChanged: (courses) => setState(() => _unlockedCourses = courses),
-        onLogout: widget.onLogout,
-      ),
+      HomePage(key: _homePageKey, onLogout: widget.onLogout),
       if (widget.user.isAdmin) const AdminPage(),
       const InfoPage(),
     ];
@@ -140,13 +124,6 @@ class _RootPageState extends State<RootPage> {
   /// Index of the info page within [_pages] — shifts by one when the admin
   /// page is present ahead of it.
   int get _infoPageIndex => widget.user.isAdmin ? 2 : 1;
-
-  Future<void> _openLesson(Course course, Lesson lesson) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
-    );
-    _homePageKey.currentState?.refresh();
-  }
 
   @override
   void dispose() {
@@ -194,25 +171,14 @@ class _RootPageState extends State<RootPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPageIndex = index;
-                });
-              },
-              children: _pages,
-            ),
-          ),
-          if (_pageOffset < 0.5)
-            LessonSearchBar(
-              courses: _unlockedCourses,
-              onSelectLesson: _openLesson,
-            ),
-        ],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentPageIndex = index;
+          });
+        },
+        children: _pages,
       ),
       bottomNavigationBar: BottomNavBar(
         onLeftPressed: _goToPreviousPage,

@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import '../models/course.dart';
+import '../models/lesson.dart';
 import '../services/course_repository.dart';
 import '../theme/app_colors.dart';
+import '../widgets/lesson_search_bar.dart';
 import 'course_detail_page.dart';
 
 class HomePage extends StatefulWidget {
-  /// Notified with the freshly unlocked course list whenever this page
-  /// reloads, so the search bar docked in RootPage stays in sync.
-  final ValueChanged<List<Course>>? onUnlockedCoursesChanged;
-
   /// Signs the account out so a different one can log in.
   final VoidCallback onLogout;
 
-  const HomePage({super.key, this.onUnlockedCoursesChanged, required this.onLogout});
+  const HomePage({super.key, required this.onLogout});
 
   @override
   State<HomePage> createState() => HomePageState();
@@ -38,7 +36,6 @@ class HomePageState extends State<HomePage> {
       _watchedIds = watched;
       _loading = false;
     });
-    widget.onUnlockedCoursesChanged?.call(unlockedCourses);
   }
 
   /// Courses this account has actually unlocked — the search bar reads this
@@ -69,12 +66,17 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> openCourse(BuildContext context, Course course) async {
+  Future<void> openCourse(BuildContext context, Course course, {Lesson? initialLesson}) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CourseDetailPage(course: course)),
+      MaterialPageRoute(
+        builder: (_) => CourseDetailPage(course: course, initialLesson: initialLesson),
+      ),
     );
     refresh();
   }
+
+  void _onSelectLesson(Course course, Lesson lesson) =>
+      openCourse(context, course, initialLesson: lesson);
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +145,10 @@ class HomePageState extends State<HomePage> {
                               },
                             ),
                     ),
+            ),
+            LessonSearchBar(
+              courses: courses,
+              onSelectLesson: _onSelectLesson,
             ),
           ],
         ),

@@ -19,22 +19,36 @@ class ZogaLogo extends StatelessWidget {
           fit: BoxFit.contain,
         ),
         SizedBox(width: fontSize * 0.25),
-        RichText(
-          text: TextSpan(
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-              color: AppColors.primary,
-            ),
-            children: const [
-              TextSpan(text: 'ZOGA'),
-              TextSpan(
-                text: '™',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 2,
+                  color: AppColors.primary,
+                ),
+                children: const [
+                  TextSpan(text: 'ZOGA'),
+                  TextSpan(
+                    text: '™',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Text(
+              'Multidimensional Movement',
+              style: TextStyle(
+                fontSize: fontSize * 0.28,
+                letterSpacing: 1,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -34,9 +34,11 @@ abstract class CourseRepository {
   Future<UnlockResult> redeemCode(String code);
   Future<void> setLessonWatched(String lessonId, bool watched);
 
-  /// Admin-only: generates [count] fresh unlock codes for [courseId] at once
-  /// (clamped to [LocalCourseRepository.maxCodesPerBatch] per call — there's
-  /// no lifetime cap on how many a course can have).
+  /// Admin-only: generates up to [count] fresh unlock codes for [courseId]
+  /// (clamped to [LocalCourseRepository.maxCodesPerBatch] per call, and
+  /// further capped so the course never has more than
+  /// [LocalCourseRepository.maxActiveCodesPerCourse] unused codes at once —
+  /// may return fewer codes than requested, or none, if that cap is hit).
   Future<List<String>> generateCodes(String courseId, {int count = 1});
 
   /// Admin-only: all codes generated so far, newest first.
@@ -55,6 +57,7 @@ class LocalCourseRepository implements CourseRepository {
   static const _keyIssuedCodes = 'issued_unlock_codes';
   static const _codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   static const maxCodesPerBatch = 30;
+  static const maxActiveCodesPerCourse = 100;
 
   String? _currentUserEmail;
 
@@ -106,10 +109,16 @@ class LocalCourseRepository implements CourseRepository {
   Future<List<String>> generateCodes(String courseId, {int count = 1}) async {
     final prefs = await SharedPreferences.getInstance();
     final issued = await _loadIssuedCodes(prefs);
+    final usedCodes = (prefs.getStringList(_keyUsedCodes) ?? []).toSet();
     final random = Random.secure();
 
+    final activeForCourse = issued.entries
+        .where((e) => e.value == courseId && !usedCodes.contains(e.key))
+        .length;
+    final remainingCapacity = (maxActiveCodesPerCourse - activeForCourse).clamp(0, maxCodesPerBatch);
+    final batchSize = count.clamp(1, maxCodesPerBatch).clamp(0, remainingCapacity);
+
     final generated = <String>[];
-    final batchSize = count.clamp(1, maxCodesPerBatch);
     for (var i = 0; i < batchSize; i++) {
       String code;
       do {

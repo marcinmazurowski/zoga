@@ -15,6 +15,7 @@ class AdminPage extends StatefulWidget {
 class _AdminPageState extends State<AdminPage> {
   Course? _selectedCourse;
   int _quantity = 1;
+  String? _limitMessage;
   bool _generating = false;
   List<IssuedCode> _issuedCodes = [];
   bool _loading = true;
@@ -35,13 +36,27 @@ class _AdminPageState extends State<AdminPage> {
     });
   }
 
+  void _setQuantity(int value) {
+    setState(() => _quantity = value.clamp(1, LocalCourseRepository.maxCodesPerBatch));
+  }
+
   Future<void> _generate() async {
     final course = _selectedCourse;
     if (course == null) return;
-    setState(() => _generating = true);
-    await courseRepository.generateCodes(course.id, count: _quantity);
+    setState(() {
+      _generating = true;
+      _limitMessage = null;
+    });
+    final generated = await courseRepository.generateCodes(course.id, count: _quantity);
     if (!mounted) return;
-    setState(() => _generating = false);
+    setState(() {
+      _generating = false;
+      if (generated.length < _quantity) {
+        _limitMessage = generated.isEmpty
+            ? 'Osiągnięto maksymalny limit ${LocalCourseRepository.maxActiveCodesPerCourse} aktywnych kodów.'
+            : 'Wygenerowano tylko ${generated.length} — osiągnięto maksymalny limit ${LocalCourseRepository.maxActiveCodesPerCourse} aktywnych kodów.';
+      }
+    });
     await _loadIssuedCodes();
   }
 
@@ -113,28 +128,20 @@ class _AdminPageState extends State<AdminPage> {
                                 'Liczba kodów',
                                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                               ),
+                              const SizedBox(height: 6),
                               Row(
-                                children: [
-                                  Expanded(
-                                    child: Slider(
-                                      value: _quantity.toDouble(),
-                                      min: 1,
-                                      max: LocalCourseRepository.maxCodesPerBatch.toDouble(),
-                                      divisions: LocalCourseRepository.maxCodesPerBatch - 1,
-                                      activeColor: AppColors.primary,
-                                      label: '$_quantity',
-                                      onChanged: (value) => setState(() => _quantity = value.round()),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 32,
-                                    child: Text(
-                                      '$_quantity',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                    ),
-                                  ),
-                                ],
+                                children: [1, 5, 10, 20, LocalCourseRepository.maxCodesPerBatch]
+                                    .map((value) => Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                                            child: _QuantityOption(
+                                              value: value,
+                                              selected: _quantity == value,
+                                              onTap: () => _setQuantity(value),
+                                            ),
+                                          ),
+                                        ))
+                                    .toList(),
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
@@ -155,15 +162,20 @@ class _AdminPageState extends State<AdminPage> {
                                   ),
                                 ),
                               ),
+                              if (_limitMessage != null) ...[
+                                const SizedBox(height: 10),
+                                Text(
+                                  _limitMessage!,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.error),
+                                ),
+                              ],
                             ],
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Text(
-                          _selectedCourse == null
-                              ? 'Aktywne (niewykorzystane) kody'
-                              : 'Aktywne kody — ${_selectedCourse!.title}',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        const Text(
+                          'Aktywne kody',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
                         const SizedBox(height: 12),
                         if (activeCodes.isEmpty)
@@ -220,6 +232,43 @@ class _AdminPageState extends State<AdminPage> {
                     ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuantityOption extends StatelessWidget {
+  final int value;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _QuantityOption({required this.value, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.accentLight : AppColors.surface,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.divider.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Text(
+            '$value',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );

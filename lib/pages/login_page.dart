@@ -77,15 +77,6 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const ZogaLogo(fontSize: 40),
-                const SizedBox(height: 8),
-                const Text(
-                  'Multidimensional Movement',
-                  style: TextStyle(
-                    fontSize: 13,
-                    letterSpacing: 1,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
                 const SizedBox(height: 48),
                 if (_step == _LoginStep.email) ..._buildEmailStep(),
                 if (_step == _LoginStep.code) ..._buildCodeStep(),
@@ -138,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'PoC (brak backendu email): kod to $_devCode',
+            'Proof of Concept: kod to $_devCode',
             style: const TextStyle(fontSize: 12, color: AppColors.secondary),
           ),
         ),
