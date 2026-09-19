@@ -10,7 +10,10 @@ class HomePage extends StatefulWidget {
   /// Signs the account out so a different one can log in.
   final VoidCallback onLogout;
 
-  const HomePage({super.key, required this.onLogout});
+  /// Admins see the whole catalog without unlocking anything.
+  final bool isAdmin;
+
+  const HomePage({super.key, required this.onLogout, this.isAdmin = false});
 
   @override
   State<HomePage> createState() => HomePageState();
@@ -40,8 +43,9 @@ class HomePageState extends State<HomePage> {
 
   /// Courses this account has actually unlocked — the search bar reads this
   /// too, so it only ever offers lessons the user can already watch.
-  List<Course> get unlockedCourses =>
-      courseRepository.allCourses.where((c) => _unlockedIds.contains(c.id)).toList();
+  List<Course> get unlockedCourses => widget.isAdmin
+      ? courseRepository.allCourses
+      : courseRepository.allCourses.where((c) => _unlockedIds.contains(c.id)).toList();
 
   Future<void> _confirmLogout(BuildContext context) async {
     final confirmed = await showDialog<bool>(

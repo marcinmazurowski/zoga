@@ -7,9 +7,9 @@ import '../models/lesson.dart';
 final List<Course> mockCourses = [
   Course(
     id: 'course_fascia',
-    title: 'Praca z powięzią',
+    title: 'Zoga Movement Introduction',
     description:
-        'Techniki uwalniania powięzi, czytanie ciała jako mapy oraz precyzja dotyku.',
+        'Podstawy metody Zoga Movement dla specjalistów ruchu i terapeutów manualnych — punkt wyjścia do ścieżek Practice i Therapy.',
     icon: Icons.accessibility_new,
     lessons: const [
       Lesson(
@@ -33,19 +33,19 @@ final List<Course> mockCourses = [
     ],
   ),
   Course(
-    id: 'course_somatic',
-    title: 'Świadomość ciała',
-    description: 'Praktyki somatyczne prowadzące do zmiany postawy i świadomości siebie.',
-    icon: Icons.psychology_outlined,
+    id: 'course_practice',
+    title: 'Zoga Movement Practice',
+    description: 'Ścieżka dla pracy ruchowej z grupami, po szkoleniu Zoga Movement Introduction.',
+    icon: Icons.groups_outlined,
     lessons: const [
       Lesson(
-        id: 'somatic_1',
+        id: 'practice_1',
         title: 'Ruch jako narzędzie zmiany',
         url: 'https://www.youtube.com/watch?v=usop847mLuI',
         source: VideoSource.youtube,
       ),
       Lesson(
-        id: 'somatic_2',
+        id: 'practice_2',
         title: 'Dotyk i precyzja pracy',
         url: 'https://www.youtube.com/watch?v=usop847mLuI',
         source: VideoSource.youtube,
@@ -54,9 +54,9 @@ final List<Course> mockCourses = [
   ),
   Course(
     id: 'course_therapy_home',
-    title: 'Terapia ruchem w domu',
-    description: 'Zestaw ćwiczeń terapeutycznych do samodzielnej pracy w domu.',
-    icon: Icons.home_work_outlined,
+    title: 'Zoga Movement Therapy — Wady Postawy',
+    description: 'Badanie posturalne w statyce i w ruchu oraz korekcja najczęstszych wad postawy technikami ZOGA.',
+    icon: Icons.straighten,
     lessons: const [
       Lesson(
         id: 'home_1',
@@ -77,5 +77,53 @@ final List<Course> mockCourses = [
         source: VideoSource.youtube,
       ),
     ],
+  ),
+  ..._catalogCourses,
+];
+
+/// Selected trainings from the Zoga offer (zoga-movement.com). PoC lessons
+/// are placeholders sharing one demo video until real content is uploaded.
+final List<Course> _catalogCourses = [
+  for (final c in _catalog)
+    Course(
+      id: 'course_${c.slug}',
+      title: c.title,
+      description: c.description,
+      icon: c.icon,
+      lessons: [
+        Lesson(
+          id: '${c.slug}_1',
+          title: 'Wprowadzenie do szkolenia',
+          url: _demoVideo,
+          source: VideoSource.youtube,
+        ),
+        Lesson(
+          id: '${c.slug}_2',
+          title: 'Materiały uzupełniające',
+          url: _demoVideo,
+          source: VideoSource.youtube,
+        ),
+      ],
+    ),
+];
+
+const _demoVideo = 'https://www.youtube.com/watch?v=usop847mLuI';
+
+typedef _CatalogEntry = ({String slug, String title, String description, IconData icon});
+
+const List<_CatalogEntry> _catalog = [
+  (
+    slug: 'face_1',
+    title: 'Zoga Face Integration — Moduł 1',
+    description:
+        'Bezpieczna, precyzyjna praca z tkankami twarzy, jamy ustnej i czaszki — dla terapeutów, kosmetycznych masażystów i specjalistów manualnych.',
+    icon: Icons.face_retouching_natural,
+  ),
+  (
+    slug: 'pediatrics_1',
+    title: 'Zoga Therapy w Pediatrii — Moduł 1',
+    description:
+        'Rozluźnianie mięśniowo-powięziowe u dzieci (szczególnie z problemami neurologicznymi) — dla fizjoterapeutów i lekarzy.',
+    icon: Icons.child_care,
   ),
 ];

@@ -115,7 +115,7 @@ class _RootPageState extends State<RootPage> {
     _pageController = PageController();
     _homePageKey = GlobalKey<HomePageState>();
     _pages = [
-      HomePage(key: _homePageKey, onLogout: widget.onLogout),
+      HomePage(key: _homePageKey, onLogout: widget.onLogout, isAdmin: widget.user.isAdmin),
       if (widget.user.isAdmin) const AdminPage(),
       const InfoPage(),
     ];
@@ -161,6 +161,8 @@ class _RootPageState extends State<RootPage> {
 
   Widget? _getCenterWidget(BuildContext context) {
     if (_currentPageIndex == 0) {
+      // Admins already see every course, so there is nothing to unlock.
+      if (widget.user.isAdmin) return null;
       return HomePageCenterButton(onPressed: _showUnlockSheet);
     } else if (_currentPageIndex == _infoPageIndex) {
       return const InfoPageCenterButton();
